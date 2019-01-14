@@ -1,0 +1,136 @@
+workflow:
+- name: "kubernetes"
+  labels:
+  - group: "status"
+    labels:
+      - "welcome"
+      - "pending"
+      - "translating"
+      - "pushed"
+      - "merged"
+  events:
+    on_issue:
+    - name: "new_issue"
+      description: "A new issue had been created."
+      regex: opened
+      conditions: []
+      actions:
+      - type: label
+        value:
+          group: status
+          label: welcome
+          mutex: True
+    on_comment:
+    - name: "accept"
+      regex: \/accept
+      description: "A user is trying to accept this task."
+      conditions:
+      - type: "labels"
+        value:
+        - "pending"
+        failed_actions:
+        - type: comment
+          value: "Sorry @%operator%, only issues with special values ('pending') can be accepted."
+      - type: state
+        value: "open"
+        failed_actions:
+        - type: comment
+          value: "Sorry @%operator%, only active issues can be accepted."
+      - type: assigned
+        value: False
+        failed_actions:
+        - type: comment
+          value: "Sorry @%operator%, only issues without assignee can be accepted."
+      - type: user_is_member
+        value: True
+        failed_actions:
+        - type: comment
+          value: "Sorry @%operator%, you are not allowed member of this issue."
+      - type: search
+        value:
+          assignee: "%operator%"
+          max: 8
+          label: translating
+        failed_actions:
+        - type: comment
+          value: "Sorry @%operator%, only 2 issues can be accepted by the same user."
+      actions:
+      - type: assign
+        value: "%operator%"
+      - type: label
+        value:
+          group: status
+          label: translating
+          mutex: True
+      - type: comment
+        value: "Thank you @%operator%, this issue had been assigned to you."
+    - name: "pushed"
+      description: "An PR for this issue had been created."
+      regex: \/pushed
+      conditions:
+      - type: labels
+        value:
+        - "translating"
+        failed_action:
+        - type: comment
+          value: "Sorry @%operator%, only issues with special values ('translating') can be accepted."
+      - type: state
+        value: "open"
+        failed_actions:
+        - type: comment
+          value: "Sorry @%operator%, only active issues can be accepted."
+      - type: assigned
+        value: True
+        failed_actions:
+        - type: comment
+          value: "Sorry @%operator%, only issues had been assigned can be accepted."
+      - type: user_in_list
+        value:
+        - "%admin%"
+        - "%assignee%"
+        failed_actions:
+        - type: comment
+          value: "Sorry @%operator%, you are not allowed to push this issue."
+      actions:
+      - type: label
+        value:
+          group: status
+          label: pushed
+          mutex: True
+
+    - name: "merged"
+      description: "An PR for this issue had been merged."
+      regex: \/merged
+      conditions:
+      - type: labels
+        value:
+        - "pushed"
+        failed_action:
+        - type: comment
+          value: "Sorry @%operator%, only issues with special values ('pushed') can be accepted."
+      - type: state
+        value: "open"
+        failed_actions:
+        - type: comment
+          value: "Sorry @%operator%, only active issues can be accepted."
+      - type: assigned
+        value: True
+        failed_actions:
+        - type: comment
+          value: "Sorry @%operator%, only issues had been assigned can be accepted."
+      - type: user_in_list
+        value:
+        - "%admin%"
+        - "%assignee%"
+        failed_actions:
+        - type: comment
+          value: "Sorry @%operator%, you are not allowed to merge this issue."
+      actions:
+      - type: label
+        value:
+          group: status
+          label: merged
+          mutex: True
+      - type: set_state
+        value: "closed"
+
