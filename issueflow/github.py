@@ -2,12 +2,14 @@
 
 import github
 import re
+import time
 
 
 class GithubOperator:
     token = ""
     client = None
     admin_list = None
+    write_interval = 1
 
     def __init__(self, token):
         self.token = token
@@ -49,27 +51,34 @@ class GithubAction(GithubOperator):
                 for item in label_group["labels"]:
                     if item == label:
                         issue_obj.add_to_labels(label)
+                        time.sleep(self.write_interval)
                     else:
                         if item in existing_labels:
                             issue_obj.remove_from_labels(item)
+                            time.sleep(self.write_interval)
 
     def remove_label(self, subject, label):
         issue_obj = self.get_issue(subject["repo"], subject["issue_id"])
         issue_obj.remove_from_labels(label)
+        time.sleep(self.write_interval)
 
     def comment(self, subject, comment):
         issue_obj = self.get_issue(subject["repo"], subject["issue_id"])
         var_processor = GithubVariable(self.token)
         issue_obj.create_comment(var_processor.translate(subject, comment))
+        time.sleep(self.write_interval)
 
     def assign(self, subject, assignee):
         issue_obj = self.get_issue(subject["repo"], subject["issue_id"])
         var_processor = GithubVariable(self.token)
         issue_obj.add_to_assignees(var_processor.translate(subject, assignee))
+        time.sleep(self.write_interval)
 
     def set_state(self, subject, value):
         issue_obj = self.get_issue(subject["repo"], subject["issue_id"])
         issue_obj.edit(state=value)
+        time.sleep(self.write_interval)
+
 
 class GithubCondition(GithubOperator):
 
