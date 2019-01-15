@@ -1,3 +1,2 @@
-github-webhook
 PyGithub
 PyYAML
