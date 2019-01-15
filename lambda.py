@@ -11,7 +11,7 @@ LOG_LEVEL = os.getenv('LOG_LEVEL',  str(logging.INFO))
 logger = logging.getLogger()
 logger.setLevel(int(LOG_LEVEL))
 
-
+    
 def webhook(event, context):
     if event["httpMethod"] != "POST":
         return {
