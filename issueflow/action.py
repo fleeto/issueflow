@@ -11,6 +11,8 @@ def execute(config, token, workflow, admin_list, event, subject):
     condition = github.GithubCondition(token)
     condition.admin_list = admin_list
     command = conf.get_command(workflow, event, subject["command"])
+    if command is None:
+        return
     passed = True
     for item in command["conditions"]:
         if not condition.check_condition(subject, item):
