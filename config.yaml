@@ -49,11 +49,11 @@ workflow:
       - type: search
         value:
           assignee: "%operator%"
-          max: 8
+          max: 5
           label: translating
         failed_actions:
         - type: comment
-          value: "Sorry @%operator%, only 2 issues can be accepted by the same user."
+          value: "Sorry @%operator%, only 5 issues can be accepted by the same user."
       actions:
       - type: assign
         value: "%operator%"
