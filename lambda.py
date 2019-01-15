@@ -6,9 +6,10 @@ from issueflow import action
 TOKEN = os.getenv('GITHUB_TOKEN', "")
 WORKFLOW = os.getenv('WORKFLOW', "")
 ADMINS = os.getenv('ADMINS', "")
+LOG_LEVEL = os.getenv('LOG_LEVEL',  str(logging.INFO))
 
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger.setLevel(int(LOG_LEVEL))
 
 
 def webhook(event, context):
