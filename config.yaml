@@ -71,7 +71,7 @@ workflow:
       - type: labels
         value:
         - "translating"
-        failed_action:
+        failed_actions:
         - type: comment
           value: "Sorry @%operator%, only issues with special values ('translating') can be accepted."
       - type: state
@@ -105,7 +105,7 @@ workflow:
       - type: labels
         value:
         - "pushed"
-        failed_action:
+        failed_actions:
         - type: comment
           value: "Sorry @%operator%, only issues with special values ('pushed') can be accepted."
       - type: state
@@ -205,7 +205,7 @@ workflow:
       - type: labels
         value:
         - "translating"
-        failed_action:
+        failed_actions:
         - type: comment
           value: "Sorry @%operator%, only issues with special values ('translating') can be accepted."
       - type: state
@@ -239,7 +239,7 @@ workflow:
       - type: labels
         value:
         - "pushed"
-        failed_action:
+        failed_actions:
         - type: comment
           value: "Sorry @%operator%, only issues with special values ('pushed') can be accepted."
       - type: state
