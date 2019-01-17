@@ -23,14 +23,11 @@ def webhook(request):
             "Event ID": request.headers["X-GitHub-Delivery"]
         }
     )
-    logger.log_struct(
-        {"workflow": WORKFLOW, "admins": ADMINS}
-    )
     if request.method != "POST":
         return "Method Not Allowed"
     data = request.get_json()
 
-    if event_type == "on_issue":
+    if event_type == "issues":
         git_action = data["action"]
         if git_action != "opened":
             return
@@ -46,7 +43,7 @@ def webhook(request):
             ADMINS.split(","), "on_issue",
             subject
         )
-        return "Event 'on_issue' processed."
+        return "Event 'issues' processed."
 
     if event_type == "issue_comment":
         subject = {
@@ -63,4 +60,4 @@ def webhook(request):
         )
         return "Event 'issue_comment' processed."
 
-    return "Current event {} is not supported.".format(event_type)
+    return "Current event '{}' is not supported.".format(event_type)
