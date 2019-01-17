@@ -3,8 +3,8 @@
 from issueflow import configure, github
 
 
-def execute(config, token, workflow, 
-        admin_list, event, subject, interval=1):
+def execute(config, token, workflow,
+            admin_list, event, subject, interval=1):
     conf = configure.Configuration(config)
     action = github.GithubAction(token)
     action.write_interval = interval

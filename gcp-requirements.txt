@@ -1,0 +1,4 @@
+google-cloud
+google-cloud-logging
+PyGithub
+PyYAML
