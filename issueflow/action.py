@@ -8,13 +8,13 @@ def execute(config, token, workflow,
     conf = configure.Configuration(config)
     action = github.GithubAction(token)
     action.write_interval = interval
-    action.label_list = conf.get_labels("kubernetes")
+    action.label_list = conf.get_labels(workflow)
 
     condition = github.GithubCondition(token)
     condition.admin_list = admin_list
     command = conf.get_command(workflow, event, subject["command"])
     if command is None:
-        return
+        return False
     passed = True
     for item in command["conditions"]:
         if not condition.check_condition(subject, item):
@@ -27,3 +27,4 @@ def execute(config, token, workflow,
         action_list = command["actions"]
         for action_item in action_list:
             action.execute_action(subject, action_item)
+    return True
