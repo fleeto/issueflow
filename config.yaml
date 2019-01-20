@@ -155,6 +155,38 @@ workflow:
           label: welcome
           mutex: True
     on_comment:
+    - name: "confirm"
+      description: "Accept an new issue as a task."
+      regex: \/confirm
+      conditions:
+      - type: labels
+        value:
+        - "welcome"
+        failed_actions:
+        - type: comment
+          value: "Sorry @%operator%, only issues with label `welcome` can be confirmed."
+      - type: state
+        value: "open"
+        failed_actions:
+        - type: comment
+          value: "Sorry @%operator%, only active issues can be accepted."
+      - type: assigned
+        value: False
+        failed_actions:
+        - type: comment
+          value: "Sorry @%operator%, only issues had not been assigned can be confirmed."
+      - type: user_in_list
+        value:
+        - "%admin%"
+        failed_actions:
+        - type: comment
+          value: "Sorry @%operator%, you are not allowed to confirm this issue."
+      actions:
+      - type: label
+        value:
+          group: status
+          label: pending
+          mutex: True
     - name: "accept"
       regex: \/accept
       description: "A user is trying to accept this task."
