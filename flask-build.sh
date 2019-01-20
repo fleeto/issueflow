@@ -6,9 +6,7 @@ mkdir -p "$TMP"
 
 cp -Rf issueflow "$TMP"
 cp config.yaml "$TMP"
-cp gcp-entry.py "$TMP/main.py"
-cp gcp-requirements.txt "$TMP/requirements.txt"
-cp ~/Downloads/permission.json "$TMP"
+cp flask-requirements.txt "$TMP/requirements.txt"
 cd "$TMP"
 
 find . -name __pycache__ -exec rm -Rf {} \;
