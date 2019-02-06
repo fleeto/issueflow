@@ -161,7 +161,7 @@ workflow:
       - type: label
         value:
           group: status
-          label: merged
+          label: finished
           mutex: True
       - type: set_state
         value: "closed"
@@ -173,7 +173,7 @@ workflow:
       - "pending"
       - "translating"
       - "pushed"
-      - "merged"
+      - "finished"
   events:
     on_issue:
     - name: "new_issue"
@@ -327,7 +327,7 @@ workflow:
       - type: label
         value:
           group: status
-          label: merged
+          label: finished
           mutex: True
       - type: set_state
         value: "closed"

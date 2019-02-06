@@ -1,0 +1,53 @@
+repositories:
+  kubernetes:
+    valid_extensions:
+    - ".md"
+    - ".htm"
+    - ".html"
+    labels:
+      default:
+      - priority/P0
+      new:
+      - sync/new
+      update:
+      - sync/update
+    branches:
+    - name: "1.10"
+      value: origin/release-1.10
+      path: "/Users/dustise/Downloads/k8sdoc/1.10"
+      labels:
+      - version/1.10
+    - name: "1.11"
+      value: origin/release-1.11
+      path: "/Users/dustise/Downloads/k8sdoc/1.11"
+      labels:
+      - version/1.11
+    - name: "1.12"
+      value: origin/release-1.12
+      path: "/Users/dustise/Downloads/k8sdoc/1.12"
+      labels:
+      - version/1.12
+    - name: "1.13"
+      value: origin/release-1.13
+      path: "/Users/dustise/Downloads/k8sdoc/1.13"
+      labels:
+      - version/1.13
+    - name: "1.14"
+      value: origin/release-1.14
+      path: "/Users/dustise/Downloads/k8sdoc/1.14"
+      labels:
+      - version/1.14
+    source:
+      name: en
+      path: content/en
+    destination:
+    - name: zh
+      path: content/zh
+      labels:
+      - lang/zh
+    - name: jp
+      path: content/jp
+      labels:
+      - lang/jp
+    repository:
+      path: "/Users/dustise/Downloads/website"
