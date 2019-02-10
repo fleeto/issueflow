@@ -4,8 +4,8 @@ CODE=`uuidgen`
 TMP="/tmp/$CODE"
 mkdir -p "$TMP"
 
-cp -Rf githubutil "$TMP"
-cp config.yaml "$TMP"
+cp -Rf ../githubutil "$TMP"
+cp ../config/config.yaml "$TMP"
 cp flask-requirements.txt "$TMP/requirements.txt"
 cd "$TMP"
 
