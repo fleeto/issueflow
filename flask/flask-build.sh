@@ -5,7 +5,7 @@ TMP="/tmp/$CODE"
 mkdir -p "$TMP"
 
 cp -Rf ../githubutil "$TMP"
-cp ../config/config.yaml "$TMP"
+cp ../config/workflow.yaml "$TMP/config.yaml"
 cp flask-requirements.txt "$TMP/requirements.txt"
 cd "$TMP"
 

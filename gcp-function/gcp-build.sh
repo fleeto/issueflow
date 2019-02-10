@@ -5,7 +5,7 @@ TMP="/tmp/$CODE"
 mkdir -p "$TMP"
 
 cp -Rf ../githubutil "$TMP"
-cp ../config/config.yaml "$TMP"
+cp ../config/workflow.yaml "$TMP/config.yaml"
 cp gcp-entry.py "$TMP/main.py"
 cp gcp-requirements.txt "$TMP/requirements.txt"
 cp ~/Downloads/permission.json "$TMP"
