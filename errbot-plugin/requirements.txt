@@ -1,0 +1,5 @@
+PyGithub
+PyYAML
+markdown<3.0
+sleekxmpp
+errbot[slack,telegram,IRC,hipchat]

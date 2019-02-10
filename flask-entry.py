@@ -5,7 +5,7 @@ from github_webhook import Webhook
 from flask import Flask
 import os
 import sys
-from issueflow import action
+from githubutil import action
 
 import logging.handlers
 

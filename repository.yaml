@@ -1,46 +1,47 @@
 repositories:
   kubernetes:
+    github:
+      owner: fleeto
+      repository: translab
     valid_extensions:
     - ".md"
     - ".htm"
     - ".html"
     labels:
-      default:
-      - priority/P0
-      new:
-      - sync/new
-      update:
-      - sync/update
+    - priority/P0
     branches:
     - name: "1.10"
       value: origin/release-1.10
-      path: "/Users/dustise/Downloads/k8sdoc/1.10"
+      path: "/errbot/repository/1.10"
+      url_prefix:
+        source: "https://github.com/kubernetes/website/blob/release-1.10/content/en"
       labels:
       - version/1.10
     - name: "1.11"
       value: origin/release-1.11
-      path: "/Users/dustise/Downloads/k8sdoc/1.11"
+      path: "/errbot/repository/1.11"
+      url_prefix:
+        source: "https://github.com/kubernetes/website/blob/release-1.11/content/en"
       labels:
       - version/1.11
     - name: "1.12"
       value: origin/release-1.12
-      path: "/Users/dustise/Downloads/k8sdoc/1.12"
+      path: "/errbot/repository/1.12"
+      url_prefix:
+        source: "https://github.com/kubernetes/website/blob/release-1.12/content/en"
       labels:
       - version/1.12
     - name: "1.13"
       value: origin/release-1.13
-      path: "/Users/dustise/Downloads/k8sdoc/1.13"
+      path: "/errbot/repository/1.13"
+      url_prefix:
+        source: "https://github.com/kubernetes/website/blob/release-1.13/content/en"
       labels:
       - version/1.13
-    - name: "1.14"
-      value: origin/release-1.14
-      path: "/Users/dustise/Downloads/k8sdoc/1.14"
-      labels:
-      - version/1.14
     source:
       name: en
       path: content/en
-    destination:
+    languages:
     - name: zh
       path: content/zh
       labels:
@@ -49,5 +50,3 @@ repositories:
       path: content/jp
       labels:
       - lang/jp
-    repository:
-      path: "/Users/dustise/Downloads/website"

@@ -12,47 +12,48 @@ class Configuration:
         with open(configfile, "r") as handler:
             self.__configure_object = yaml.load(handler)
 
-    def _repository_set(self, name):
-        self._current_repository_name = name
-
-    def _repository_get(self):
-        assert self._current_repository_name != "", "Set current repository name first."
-        return self.__configure_object["repositories"][self._current_repository_name]
-
-    repository = property(_repository_get, _repository_set)
+    def _get_repository(self, repository_name):
+        return self.__configure_object["repositories"][repository_name]
 
     def list_repository(self):
-        list((self.__configure_object["repositories"]).keys())
+        return list((self.__configure_object["repositories"]).keys())
 
-    def list_branch(self):
+    def get_repository(self, name):
+        return self.__configure_object["repositories"][name]
+
+    def list_branch(self, repository_name):
         result = []
-        for item in self.repository["branches"]:
+        repo_data = self._get_repository(repository_name)
+        for item in repo_data:
             result.append(item["name"])
         return result
 
-    def get_source(self):
-        return self.repository["source"]
+    def get_source(self, repository_name):
+        repo_data = self._get_repository(repository_name)
+        return repo_data["source"]
 
-    def get_branch(self, branch_name):
-        assert self._current_repository_name != ""
-        branch_list = self.repository["branches"]
+    def get_branch(self, repository_name, branch_name):
+        repo_data = self._get_repository(repository_name)
+        branch_list = repo_data["branches"]
         for branch_item in branch_list:
             if branch_item["name"] == branch_name:
                 return branch_item
         return None
 
-    def list_destination(self):
+    def list_languages(self, repository_name):
         result = []
-        for item in self.__configure_object["destination"]:
+        repo_data = self._get_repository(repository_name)
+        for item in repo_data["languages"]:
             result.append(item)
         return result
 
-    def get_destination(self, name):
-
-        for item in self.repository["destination"]:
+    def get_languages(self, repository_name, name):
+        repo_data = self._get_repository(repository_name)
+        for item in repo_data["languages"]:
             if item["name"] == name:
                 return item
         return None
 
-    def get_valid_extensions(self):
-        return self.repository["valid_extensions"]
+    def get_valid_extensions(self, repository_name):
+        repo_data = self._get_repository(repository_name)
+        return repo_data["valid_extensions"]
