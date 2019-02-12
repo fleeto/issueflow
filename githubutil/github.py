@@ -1,46 +1,132 @@
 # -*- coding: UTF-8 -*-
+import datetime
 
 import github
 import re
 import time
+import logging
 
 
 class GithubOperator:
-    token = ""
-    client = None
+    _token = ""
+    _client = None
     admin_list = None
     write_interval = 1
 
     def __init__(self, token):
-        self.token = token
-        self.client = github.Github(self.token)
+        self._token = token
+        self._client = github.Github(self._token)
 
     def get_repo(self, repo_name):
-        return self.client.get_repo(repo_name)
+        """
+        Get an Repository Object by its name.
+        :type repo_name: str
+        :param repo_name: full name of the repository
+        :return: Repository Name
+        :rtype: github.Repository.Repository
+        """
+        return self._client.get_repo(repo_name)
 
-    def get_issue(self, repo_name, issue_id):
-        repo = self.get_repo(repo_name)
+    def get_issue(self, repository_name, issue_id):
+        """
+        Get issue object
+        :param repository_name:
+        :param issue_id:
+        :rtype: github.Issue.Issue
+        """
+        repo = self.get_repo(repository_name)
         return repo.get_issue(issue_id)
+
+    def search_issue(self, query, limit_interval=0):
+        """
+        Search issues from Github.
+        :param limit_interval: If limit_interval > 0, then check the rate limit.
+        :param query: Github query
+        :type query: str
+        :rtype list of github.Issue.Issue
+        """
+        client = self._client
+        res = client.search_issues(query)
+        result = []
+        count = 0
+        for issue in res:
+            if limit_interval > 0:
+                count += 1
+                if count % limit_interval == 0:
+                    self.check_limit(search_limit=limit_interval)
+            result.append(issue)
+        return result
+
+    def check_limit(self, core_limit=10, search_limit=10):
+        """
+        Wait for rate limit of github
+        :param core_limit:
+        :param search_limit:
+        """
+
+        limit = self._client.get_rate_limit()
+        now = datetime.datetime.utcnow()
+
+        if limit.core.remaining < core_limit:
+            tick = (limit.core.reset - now).total_seconds()
+            logging.warning(
+                "Waiting core limits for {} seconds.".format(tick))
+            time.sleep(tick + 2)
+        if limit.search.remaining <= search_limit:
+            tick = (limit.search.reset - now).total_seconds()
+            logging.warning(
+                "Waiting search limits for {} seconds.".format(tick))
+            time.sleep(tick + 2)
+
+    def create_issue(self, repository_name, title, body):
+        """
+        Create an issue in specified repository/
+        :param repository_name:
+        :param title:
+        :param body:
+        :rtype: github.Issue.Issue
+        """
+        repo = self.get_repo(repository_name)
+        return repo.create_issue(title, body)
+
+    def issue_comment(self, repository_name, issue_id, comment_body):
+        """
+        Post comment for the issue in specified repository.
+        :type repository_name: str
+        :type issue_id: int
+        :type comment_body: str
+        """
+        issue = self.get_issue(repository_name, issue_id)
+        return issue.create_comment(comment_body)
 
 
 class GithubAction(GithubOperator):
-
     label_list = None
 
     def execute_action(self, subject, action):
         if action["type"] == "comment":
-            self.comment(subject, action["value"])
+            self._comment(subject, action["value"])
         if action["type"] == "label":
             group_name = action["value"]["group"]
             mutex = bool(action["value"]["mutex"])
             label = action["value"]["label"]
-            self.set_label(subject, group_name, label, mutex)
+            self._set_label(subject, group_name, label, mutex)
         if action["type"] == "assign":
-            self.assign(subject, action["value"])
+            self._assign(subject, action["value"])
         if action["type"] == "set_state":
-            self.set_state(subject, action["value"])
+            self._set_state(subject, action["value"])
+        if action["type"] == "create_issue":
+            time.sleep(self.write_interval)
+            return self.create_issue(subject["repo"],
+                                     action["title"], action["body"])
 
-    def set_label(self, subject, group, label, mutex=False):
+    def _create_issue(self, subject, title, body):
+        repo = self.get_repo(subject["repo"])
+        time.sleep(self.write_interval)
+        self.create_issue(subject["repo"], title)
+        return repo.create_issue(title, body)
+
+    def _set_label(self, subject, group, label, mutex=False):
         issue_obj = self.get_issue(subject["repo"], subject["issue_id"])
         existing_labels = []
         if mutex:
@@ -57,24 +143,24 @@ class GithubAction(GithubOperator):
                             issue_obj.remove_from_labels(item)
                             time.sleep(self.write_interval)
 
-    def remove_label(self, subject, label):
+    def _remove_label(self, subject, label):
         issue_obj = self.get_issue(subject["repo"], subject["issue_id"])
         issue_obj.remove_from_labels(label)
         time.sleep(self.write_interval)
 
-    def comment(self, subject, comment):
+    def _comment(self, subject, comment):
         issue_obj = self.get_issue(subject["repo"], subject["issue_id"])
-        var_processor = GithubVariable(self.token)
+        var_processor = GithubVariable(self._token)
         issue_obj.create_comment(var_processor.translate(subject, comment))
         time.sleep(self.write_interval)
 
-    def assign(self, subject, assignee):
+    def _assign(self, subject, assignee):
         issue_obj = self.get_issue(subject["repo"], subject["issue_id"])
-        var_processor = GithubVariable(self.token)
+        var_processor = GithubVariable(self._token)
         issue_obj.add_to_assignees(var_processor.translate(subject, assignee))
         time.sleep(self.write_interval)
 
-    def set_state(self, subject, value):
+    def _set_state(self, subject, value):
         issue_obj = self.get_issue(subject["repo"], subject["issue_id"])
         issue_obj.edit(state=value)
         time.sleep(self.write_interval)
@@ -105,7 +191,7 @@ class GithubCondition(GithubOperator):
 
     def check_user_in_list(self, subject, user_list):
         result = []
-        var_processor = GithubVariable(self.token)
+        var_processor = GithubVariable(self._token)
         var_processor.admin_list = self.admin_list
         for item in user_list:
             res = var_processor.parse_variable(subject, item)
@@ -114,10 +200,6 @@ class GithubCondition(GithubOperator):
             else:
                 result.append(res)
         return subject["sender"] in result
-
-
-
-
 
     def check_label(self, subject, label_list):
         issue_obj = self.get_issue(subject["repo"], subject["issue_id"])
@@ -131,7 +213,7 @@ class GithubCondition(GithubOperator):
         return state == issue_obj.state
 
     def check_search(self, subject, search):
-        var_processor = GithubVariable(self.token)
+        var_processor = GithubVariable(self._token)
         repo = self.get_repo(subject["repo"])
         issue_list = repo.get_issues(
             assignee=var_processor.parse_variable(subject, search["assignee"]),
@@ -156,7 +238,6 @@ class GithubCondition(GithubOperator):
 
 
 class GithubVariable(GithubOperator):
-
     admin_list = []
 
     def parse_variable(self, subject, placeholder):

@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-from issueflow import configure, github
+from githubutil import configure, github
 
 
 def execute(config, token, workflow,

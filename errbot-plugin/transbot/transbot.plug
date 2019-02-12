@@ -1,0 +1,9 @@
+[Core]
+Name = TranslaterBot
+Module = transbot
+
+[Documentation]
+Description = Helper for k8s & istio translator.
+
+[Python]
+Version = 3

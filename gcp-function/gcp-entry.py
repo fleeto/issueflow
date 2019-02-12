@@ -3,7 +3,7 @@
 
 import os
 from google.cloud import logging
-from issueflow import action
+from githubutil import action
 
 TOKEN = os.getenv('GITHUB_TOKEN', "")
 WORKFLOW = os.getenv('WORKFLOW', "")
