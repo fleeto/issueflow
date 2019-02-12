@@ -5,5 +5,5 @@ RUN /usr/local/bin/prepare.sh
 COPY config.py /errbot/
 COPY transbot /errbot/plugins/transbot
 WORKDIR /errbot
-VOLUME ["/errbot/data", "/errbot/config"]
+VOLUME ["/errbot/data", "/errbot/config", "/errbot/repository"]
 CMD ["/usr/local/bin/entry.sh"]

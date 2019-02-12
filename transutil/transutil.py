@@ -225,7 +225,7 @@ class TranslateUtil:
                             dupe = True
                             break
                         else:
-                            if set(search_labels) & set(issue_record["labels"]) == set(search_labels):
+                            if set(search_labels).issubset(issue_record["labels"]):
                                 dupe = True
                             break
 

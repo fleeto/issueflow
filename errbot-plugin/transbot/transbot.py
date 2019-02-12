@@ -61,11 +61,9 @@ def build_issue(trans, branch, item_list):
             skip_count += 1
         else:
             new_count += 1
-            yield ("New Issue: #{}: {}".format(
-                new_issue.number, new_issue.title))
             if new_count >= MAX_WRITE:
                 break
-        return new_count, skip_count
+    return new_count, skip_count
 
 
 def remote_repository_name():

@@ -2,4 +2,5 @@ PyGithub
 PyYAML
 markdown<3.0
 sleekxmpp
+python-telegram-bot==10.1.0
 errbot[slack,telegram,IRC,hipchat]
