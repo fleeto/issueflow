@@ -44,7 +44,8 @@ repositories:
     languages:
     - name: zh
       path: content/zh
-      labels: []
+      labels:
+      - lang/zh
     - name: jp
       path: content/jp
       labels:
