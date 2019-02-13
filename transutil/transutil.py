@@ -67,7 +67,7 @@ class TranslateUtil:
         path_sep = path.split(os.sep)
         result = [file_name[len(path):]
                   for file_name in file_list
-                  if file_name.split(os.sep)[len(path_sep)] == path_sep]
+                  if file_name.split(os.sep)[:len(path_sep)] == path_sep]
         return result
 
     def find_new_files(self, repository_name, branch_name, language):
