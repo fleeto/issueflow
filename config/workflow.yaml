@@ -7,7 +7,7 @@ workflow:
       - "pending"
       - "translating"
       - "pushed"
-      - "merged"
+      - "finished"
   events:
     on_issue:
     - name: "new_issue"
