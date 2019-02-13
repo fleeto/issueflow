@@ -1,6 +1,7 @@
 from gitutil.commands import GitCommand
 from gitutil.configure import Configuration
 from os.path import splitext
+import os
 import githubutil.github
 import json
 
@@ -63,10 +64,10 @@ class TranslateUtil:
             self._get_repo_path(repository, branch)
         ).list_files()
         file_list = self._filter_file_type(repository, file_list)
-        result = []
-        for file_name in file_list:
-            if file_name.startswith(path):
-                result.append(file_name.replace(path, ""))
+        path_sep = path.split(os.sep)
+        result = [file_name[len(path):]
+                  for file_name in file_list
+                  if file_name.split(os.sep)[len(path_sep)] == path_sep]
         return result
 
     def find_new_files(self, repository_name, branch_name, language):
