@@ -200,6 +200,26 @@ BOT_ALT_PREFIX_CASEINSENSITIVE = bool(
 #                   'help': {'allowmuc': False},
 #                  }
 
+CRITICAL_COMMANDS = os.environ.get('CRITICAL_COMMANDS', "")
+OPERATORS = os.environ.get('OPERATORS', "")
+PRIVATE_COMMANDS = os.environ.get('PRIVATE_COMMANDS', "")
+
+critical_commands = CRITICAL_COMMANDS.split(",")
+operators = tuple(OPERATORS.split(","))
+private_commands = PRIVATE_COMMANDS.split(",")
+
+ACCESS_CONTROLS = {}
+cmd_list = []
+for cmd in set(critical_commands) | set(private_commands):
+    cmd_policy = {}
+    if cmd in private_commands:
+        cmd_policy["allowmuc"] = False
+    if cmd in critical_commands:
+        cmd_policy["allowusers"] = operators
+    ACCESS_CONTROLS[cmd] = cmd_policy
+
+
+
 # Uncomment and set this to True to hide the restricted commands from
 # the help output.
 # HIDE_RESTRICTED_COMMANDS = False

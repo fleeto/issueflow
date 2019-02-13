@@ -1,5 +1,5 @@
 [Core]
-Name = TranslaterBot
+Name = TranslatorBot
 Module = transbot
 
 [Documentation]
