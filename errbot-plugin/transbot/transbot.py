@@ -117,6 +117,7 @@ class TransBot(BotPlugin):
         token = self[msg.frm.person + "github_token"]
         return TranslateUtil(REPOSITORY_CONFIG_FILE, token)
 
+
     @arg_botcmd('token', type=str)
     def github_bind(self, msg, token):
         client = github.Github(token)
@@ -235,7 +236,7 @@ class TransBot(BotPlugin):
         query = "repo:{} is:open type:issue".format(
             remote_repository_name()
         )
-        res = trans.cache_issues(query, OPEN_CACHE)
+        res = trans.cache_issues(query, OPEN_CACHE, MAX_RESULT)
         return "{} records had been cached".format(res)
 
     @arg_botcmd('branch', type=str)
@@ -284,13 +285,31 @@ class TransBot(BotPlugin):
                 new_count, skip_count))
             yield ("Please cache issues again.")
 
-    @arg_botcmd('repository', type=str)
-    @arg_botcmd('--count', type=int, default=10)
-    def list_release(self, msg, repository, count):
-        if not self._github_bound(msg.frm.person):
-            return "Bind your Github token please."
-        client = github.Github(self[msg.frm.person + "github_token"])
-        repo = client.get_repo(repository)
-        result = gitscan.get_release(repo, count)
-        for release in result:
-            yield ("{}: {}".format(release.title, release.html_url))
+    @botcmd
+    def show_limit(self, msg, args):
+        self._asset_bind(msg)
+        util = self._github_operator(msg)
+        limit = util.get_limit()
+        core_pattern = "Core-Limit: {}\nCore-Remaining: {}\n:Core-Reset: {}\n"
+        search_pattern = "Search-Limit: {}\nSearch-Remaining: {}\n:Search-Reset: {}\n"
+        return (core_pattern + search_pattern).format(
+            limit["core"]["limit"],
+            limit["core"]["remaining"],
+            limit["core"]["reset"],
+            limit["search"]["limit"],
+            limit["search"]["remaining"],
+            limit["search"]["reset"],
+        )
+
+
+
+    # @arg_botcmd('repository', type=str)
+    # @arg_botcmd('--count', type=int, default=10)
+    # def list_release(self, msg, repository, count):
+    #     if not self._github_bound(msg.frm.person):
+    #         return "Bind your Github token please."
+    #     client = github.Github(self[msg.frm.person + "github_token"])
+    #     repo = client.get_repo(repository)
+    #     result = gitscan.get_release(repo, count)
+    #     for release in result:
+    #         yield ("{}: {}".format(release.title, release.html_url))

@@ -16,9 +16,25 @@ from githubutil.github import GithubOperator
 util = TranslateUtil("/Users/dustise/Downloads/repository.yaml",
                      "")
 
+github = GithubOperator("13395cbc994a474db8929149b80ed6f22995c3a1")
+
+#         limit = util.get_limit()
+#         core_pattern = "Core-Limit: {}\nCore-Remaining: {}\n:Core-Reset: {}\n"
+#         search_pattern = "Search-Limit: {}\nSearch-Remaining: {}\n:Search-Reset: {}\n"
+#         return (core_pattern + search_pattern).format(
+#             limit["core"]["limit"],
+#             limit["core"]["remaining"],
+#             limit["core"]["reset"],
+#             limit["search"]["limit"],
+#             limit["search"]["remaining"],
+#             limit["search"]["reset"],
+#         )
+
 # print(util.get_default_label("kubernetes", "1.12", "zh"))
 
 # TODO: 校验
+
+print(github.get_limit())
 
 # TODO: 获取某分支新建内容
 

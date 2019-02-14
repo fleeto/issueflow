@@ -57,6 +57,21 @@ class GithubOperator:
             result.append(issue)
         return result
 
+    def get_limit(self):
+        limit = self._client.get_rate_limit()
+        return {
+            "core": {
+                "remaining": limit.core.remaining,
+                "limit": limit.core.limit,
+                "reset": limit.core.reset
+            },
+            "search": {
+                "remaining": limit.search.remaining,
+                "limit": limit.search.limit,
+                "reset": limit.search.reset
+            }
+        }
+
     def check_limit(self, core_limit=10, search_limit=10):
         """
         Wait for rate limit of github

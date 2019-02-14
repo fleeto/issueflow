@@ -94,9 +94,10 @@ class TranslateUtil:
         result.sort()
         return result
 
-    def cache_issues(self, query, file_name):
+    def cache_issues(self, query, file_name, search_limit=30):
         """
 
+        :param search_limit:
         :param query: Github query string
         :param file_name: Save search result into a json file
 
@@ -113,13 +114,9 @@ class TranslateUtil:
         }
         """
         github_client = githubutil.github.GithubOperator(self._github_token)
-        issue_list = github_client.search_issue(query)
+        issue_list = github_client.search_issue(query, search_limit)
         result = []
-        count = 0
         for issue in issue_list:
-            count += 1
-            if count % 50 == 0:
-                github_client.check_limit(50, 50)
             issue_item = {
                 "number": issue.number,
                 "title": issue.title,
