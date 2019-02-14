@@ -22,9 +22,15 @@ class Configuration:
         return self.__configure_object["repositories"][name]
 
     def list_branch(self, repository_name):
+        """
+
+        :rtype: list of str
+        :param repository_name:
+        :return: List of branch names.
+        """
         result = []
         repo_data = self._get_repository(repository_name)
-        for item in repo_data:
+        for item in repo_data["branches"]:
             result.append(item["name"])
         return result
 

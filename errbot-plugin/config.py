@@ -24,7 +24,7 @@ SENTRY_LOGLEVEL = BOT_LOG_LEVEL
 # Execute commands in asynchronous mode. In this mode, Err will spawn 3
 # seperate threads to handle commands, instead of blocking on each
 # single command.
-BOT_ASYNC = False
+BOT_ASYNC = True
 
 ##########################################################################
 # Account and chatroom (MUC) configuration                               #

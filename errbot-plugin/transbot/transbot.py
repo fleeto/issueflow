@@ -16,6 +16,7 @@ TARGET_LANG = os.getenv("TARGET_LANG")
 
 
 def build_issue(trans, branch, item_list):
+    trans.wait_for_limit(MAX_RESULT, MAX_RESULT)
     if type(item_list) == dict:
         file_list = list(item_list.keys())
         type_label = "sync/update"
@@ -26,14 +27,15 @@ def build_issue(trans, branch, item_list):
         is_diff = False
 
     # Get default labels
-    new_labels = trans.get_default_label(REPOSITORY_NAME, branch, TARGET_LANG)
+    new_labels = trans.get_default_label(
+        REPOSITORY_NAME, branch, TARGET_LANG)
     new_labels.append(type_label)
-    search_labels = trans.get_search_label(REPOSITORY_NAME, branch, TARGET_LANG)
+    search_labels = trans.get_search_label(
+        REPOSITORY_NAME, branch, TARGET_LANG)
 
     # Create Issue for new files
     new_count = 0
     skip_count = 0
-
     for file_name in file_list:
         # Generate issue body
         if is_diff:
@@ -55,7 +57,7 @@ def build_issue(trans, branch, item_list):
         new_issue = trans.create_issue(
             remote_repository_name(),
             file_name, body, new_labels, search_labels,
-            OPEN_CACHE, False
+            "", True
         )
         if new_issue is None:
             skip_count += 1
@@ -63,6 +65,8 @@ def build_issue(trans, branch, item_list):
             new_count += 1
             if new_count >= MAX_WRITE:
                 break
+        if (new_count + skip_count) % MAX_RESULT:
+            trans.wait_for_limit(MAX_RESULT, MAX_RESULT)
     return new_count, skip_count
 
 
@@ -117,23 +121,50 @@ class TransBot(BotPlugin):
         token = self[msg.frm.person + "github_token"]
         return TranslateUtil(REPOSITORY_CONFIG_FILE, token)
 
+    @botcmd
+    def list_branches(self, msg, args):
+        """
+        List all branches in current repository
+        :param msg:
+        :param args:
+        :return:
+        """
+        trans = self._translation_util(msg)
+        return "\n".join(trans.list_branches(REPOSITORY_NAME))
+
+    @botcmd
+    def find_dupe_issues(self, msg, args):
+        """
+        Find duplicated titles
+        :param msg:
+        :return:
+        """
+        github_client = self._github_operator(msg)
+        query = "repo:{} is:open type:issue".format(remote_repository_name())
+        issue_list = github_client.search_issue(query, MAX_RESULT)
+        tuple_list = [(issue.title, issue.number) for issue in issue_list]
+        tuple_list.sort()
+        count_list = {}
+        for title, number in tuple_list:
+            if title in count_list.keys():
+                count_list[title].append(number)
+            else:
+                count_list[title] = [number]
+        result = ""
+        count = 0
+        for title, number_list in count_list.items():
+            if len(number_list) == 1:
+                continue
+            result += "{} \n {}\n".format(
+                title, " ".join([str(i) for i in number_list]))
+            count += 1
+        result += "\n{} duplicated issues found.".format(count)
+        return result
 
     @arg_botcmd('token', type=str)
     def github_bind(self, msg, token):
         client = github.Github(token)
         from_user = msg.frm.person
-        # message = "You are not member of Service Mesher."
-        # try:
-        #     user = client.get_user()
-        #     for org in user.get_orgs():
-        #         if org.login == "servicemesher":
-        #             self[from_user + "github_token"] = token
-        #             self[from_user + "github_login"] = user.login
-        #             message = "Now you can do something in Servicemeser."
-        #             break
-        # except github.GithubException as e:
-        #     message = e.data
-        # return message
         user = client.get_user()
         self[from_user + "github_token"] = token
         self[from_user + "github_login"] = user.login
@@ -290,8 +321,8 @@ class TransBot(BotPlugin):
         self._asset_bind(msg)
         util = self._github_operator(msg)
         limit = util.get_limit()
-        core_pattern = "Core-Limit: {}\nCore-Remaining: {}\n:Core-Reset: {}\n"
-        search_pattern = "Search-Limit: {}\nSearch-Remaining: {}\n:Search-Reset: {}\n"
+        core_pattern = "Core-Limit: {}\nCore-Remaining: {}\nCore-Reset: {}\n"
+        search_pattern = "Search-Limit: {}\nSearch-Remaining: {}\nSearch-Reset: {}\n"
         return (core_pattern + search_pattern).format(
             limit["core"]["limit"],
             limit["core"]["remaining"],
@@ -300,8 +331,6 @@ class TransBot(BotPlugin):
             limit["search"]["remaining"],
             limit["search"]["reset"],
         )
-
-
 
     # @arg_botcmd('repository', type=str)
     # @arg_botcmd('--count', type=int, default=10)

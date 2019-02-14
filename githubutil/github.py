@@ -46,6 +46,7 @@ class GithubOperator:
         :rtype list of github.Issue.Issue
         """
         client = self._client
+        self.check_limit(search_limit=limit_interval)
         res = client.search_issues(query)
         result = []
         count = 0

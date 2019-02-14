@@ -16,7 +16,7 @@ from githubutil.github import GithubOperator
 util = TranslateUtil("/Users/dustise/Downloads/repository.yaml",
                      "")
 
-github = GithubOperator("13395cbc994a474db8929149b80ed6f22995c3a1")
+github = GithubOperator("NO TOKEN")
 
 #         limit = util.get_limit()
 #         core_pattern = "Core-Limit: {}\nCore-Remaining: {}\n:Core-Reset: {}\n"
@@ -34,7 +34,20 @@ github = GithubOperator("13395cbc994a474db8929149b80ed6f22995c3a1")
 
 # TODO: 校验
 
-print(github.get_limit())
+import json
+import time
+import sys
+
+issue_list = github.search_issue("repo:k8smeetup/website-tasks type:issue label:welcome is:open", 10)
+
+count = 0
+for issue in issue_list:
+    issue.edit(state="close")
+    time.sleep(0.2)
+    count += 1
+    if count >= 100:
+        sys.exit(0)
+
 
 # TODO: 获取某分支新建内容
 
@@ -45,8 +58,8 @@ print(github.get_limit())
 
 # TODO: 获取某分支更新翻译
 
-diff_list = util.find_updated_files("kubernetes", "1.12", "zh")
-print("\n".join(list(diff_list.keys())))
+# diff_list = util.find_updated_files("kubernetes", "1.12", "zh")
+# print("\n".join(list(diff_list.keys())))
 
 # util.show_something("1.12", "zh")
 
@@ -57,11 +70,11 @@ print("\n".join(list(diff_list.keys())))
 
 # TODO: 创建新翻 Issue
 
-util.create_issue("fleeto/docker-java",
-                  "content/help/glossary/workload.md", "Nothing",
-                  search_cache="translating.json",
-                  search_labels=["sync/new", "translating"],
-                  search_online=True)
+# util.create_issue("fleeto/docker-java",
+#                   "content/help/glossary/workload.md", "Nothing",
+#                   search_cache="translating.json",
+#                   search_labels=["sync/new", "translating"],
+#                   search_online=True)
 
 # TODO: 创建更新 Issue
 
