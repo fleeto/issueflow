@@ -70,3 +70,7 @@ class GitCommand:
             filename
         ]
         return self.__command_wrapper(command).strip()
+
+    def pull(self):
+        command = ["pull"]
+        return self.__command_wrapper(command).strip()

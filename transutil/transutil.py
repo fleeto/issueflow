@@ -2,7 +2,7 @@ from gitutil.commands import GitCommand
 from gitutil.configure import Configuration
 from os.path import splitext
 import os
-import githubutil.github
+from githubutil.github import GithubOperator
 import json
 
 
@@ -70,6 +70,13 @@ class TranslateUtil:
                   if file_name.split(os.sep)[:len(path_sep)] == path_sep]
         return result
 
+    def list_branches(self, repository_name):
+        return self._configure.list_branch(repository_name)
+
+    def wait_for_limit(self, core_limit=10, search_limit=10):
+        github_client = GithubOperator(self._github_token)
+        github_client.check_limit(core_limit, search_limit)
+
     def find_new_files(self, repository_name, branch_name, language):
         """
         Find files which is in the source path, but not in the
@@ -81,22 +88,26 @@ class TranslateUtil:
         :param language: Language name (in the configure file)
         :type language: str
         """
-        target_path = self._configure.get_languages(repository_name,
-                                                    language)["path"]
-        source_path = self._configure.get_source(repository_name)["path"]
+        target_path = self._configure.get_languages(
+            repository_name, language)["path"]
+        source_path = self._configure.get_source(
+            repository_name)["path"]
 
         # List files in source/language path
-        source_list = self._get_clean_files(repository_name, branch_name, source_path)
-        target_list = self._get_clean_files(repository_name, branch_name, target_path)
+        source_list = self._get_clean_files(repository_name,
+                                            branch_name, source_path)
+        target_list = self._get_clean_files(repository_name,
+                                            branch_name, target_path)
 
         # return the different files list
         result = list(set(source_list) - set(target_list))
         result.sort()
         return result
 
-    def cache_issues(self, query, file_name):
+    def cache_issues(self, query, file_name, search_limit=30):
         """
 
+        :param search_limit:
         :param query: Github query string
         :param file_name: Save search result into a json file
 
@@ -112,14 +123,10 @@ class TranslateUtil:
             ]
         }
         """
-        github_client = githubutil.github.GithubOperator(self._github_token)
-        issue_list = github_client.search_issue(query)
+        github_client = GithubOperator(self._github_token)
+        issue_list = github_client.search_issue(query, search_limit)
         result = []
-        count = 0
         for issue in issue_list:
-            count += 1
-            if count % 50 == 0:
-                github_client.check_limit(50, 50)
             issue_item = {
                 "number": issue.number,
                 "title": issue.title,
@@ -230,7 +237,7 @@ class TranslateUtil:
                                 dupe = True
                             break
 
-        github_client = githubutil.github.GithubOperator(self._github_token)
+        github_client = GithubOperator(self._github_token)
         if search_online:
             search_cmd = "repo:{} in:title {}".format(github_repository, title)
             if len(search_labels) > 0:

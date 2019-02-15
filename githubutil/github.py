@@ -46,6 +46,7 @@ class GithubOperator:
         :rtype list of github.Issue.Issue
         """
         client = self._client
+        self.check_limit(search_limit=limit_interval)
         res = client.search_issues(query)
         result = []
         count = 0
@@ -56,6 +57,21 @@ class GithubOperator:
                     self.check_limit(search_limit=limit_interval)
             result.append(issue)
         return result
+
+    def get_limit(self):
+        limit = self._client.get_rate_limit()
+        return {
+            "core": {
+                "remaining": limit.core.remaining,
+                "limit": limit.core.limit,
+                "reset": limit.core.reset
+            },
+            "search": {
+                "remaining": limit.search.remaining,
+                "limit": limit.search.limit,
+                "reset": limit.search.reset
+            }
+        }
 
     def check_limit(self, core_limit=10, search_limit=10):
         """
