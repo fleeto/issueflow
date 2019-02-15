@@ -4,6 +4,7 @@ import github
 import githubutil
 from githubutil.github import GithubOperator
 from gitutil.configure import Configuration as RepoConfig
+from gitutil.commands import GitCommand
 from transutil.transutil import TranslateUtil
 from errbot import BotPlugin, botcmd, arg_botcmd
 
@@ -331,6 +332,15 @@ class TransBot(BotPlugin):
             limit["search"]["remaining"],
             limit["search"]["reset"],
         )
+
+    @botcmd
+    def refresh_repositories(self, msg, args):
+        config = RepoConfig(REPOSITORY_CONFIG_FILE)
+        branches = config.get_repository(REPOSITORY_NAME)["branches"]
+        for branch in branches:
+            cmd = GitCommand(branch["path"])
+            cmd.pull()
+            yield ("{} had been updated.".format((branch["path"])))
 
     # @arg_botcmd('repository', type=str)
     # @arg_botcmd('--count', type=int, default=10)
