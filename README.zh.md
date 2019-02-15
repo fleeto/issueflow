@@ -1,6 +1,19 @@
-# issueflow
+# issueflow <!-- omit in toc -->
 
 本项目支撑了 Istio 和 Kubernetes 的文档中文化流程，它以 Github Issue 为工作对象，通过 Chatbot 和 Webhook 相结合的方式，为翻译工作提供了任务管理的支撑功能。
+
+- [总体工作流程](#%E6%80%BB%E4%BD%93%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B)
+- [任务（Issue）的状态转换](#%E4%BB%BB%E5%8A%A1issue%E7%9A%84%E7%8A%B6%E6%80%81%E8%BD%AC%E6%8D%A2)
+- [Slack(chat) bot 的使用](#slackchat-bot-%E7%9A%84%E4%BD%BF%E7%94%A8)
+  - [运行配置](#%E8%BF%90%E8%A1%8C%E9%85%8D%E7%BD%AE)
+    - [目录结构](#%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84)
+    - [配置文件](#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6)
+    - [启动脚本](#%E5%90%AF%E5%8A%A8%E8%84%9A%E6%9C%AC)
+  - [Bot 指令](#bot-%E6%8C%87%E4%BB%A4)
+- [Webhook 的使用](#webhook-%E7%9A%84%E4%BD%BF%E7%94%A8)
+  - [配置文件](#%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6-1)
+  - [环境变量](#%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F)
+  - [Github 设置](#github-%E8%AE%BE%E7%BD%AE)
 
 ## 总体工作流程
 
@@ -171,7 +184,7 @@ workflow:
       description: "Accept an new issue as a task."
       regex: \/confirm # /confirm 指令
       conditions:
-      - type: labels 
+      - type: labels
         value: # 必须包含如下标签
         - "welcome"
         failed_actions: # 如果不满足条件，则执行
