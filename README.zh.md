@@ -35,6 +35,10 @@
 
 1. Webhook 识别 Issue 中的 Comment，进行相应的标识和跟踪。
 
+总体工作流程如图所示：
+
+![workflow](workflow.png)
+
 ## 任务（Issue）的状态转换
 
 任务以 Issue 方式来体现，用标签来标注任务状态。

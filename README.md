@@ -29,6 +29,10 @@ which means it currently runs independently.
 7. Translator use Github comment to start the translation flow and progress report.
 8. Webhook would identify the github issue's comments and update issue labels accordingly.
 
+Overall workflow：
+
+![workflow](workflow.png)
+
 ## Tasks (Issues) state transition
 
 Tasks are shown as Github Issue, and use label to reflect the task's current state.
