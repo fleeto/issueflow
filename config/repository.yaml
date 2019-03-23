@@ -1,8 +1,12 @@
 repositories:
   kubernetes:
     github:
-      owner: fleeto
-      repository: translab
+      task:
+        owner: k8smeetup
+        repository: website-tasks
+      code:
+        owner: kubernetes
+        repository: website
     valid_extensions:
     - ".md"
     - ".htm"
@@ -11,28 +15,28 @@ repositories:
     - priority/P0
     branches:
     - name: "1.10"
-      value: origin/release-1.10
+      value: release-1.10
       path: "/errbot/repository/1.10"
       url_prefix:
         source: "https://github.com/kubernetes/website/blob/release-1.10/content/en"
       labels:
       - version/1.10
     - name: "1.11"
-      value: origin/release-1.11
+      value: release-1.11
       path: "/errbot/repository/1.11"
       url_prefix:
         source: "https://github.com/kubernetes/website/blob/release-1.11/content/en"
       labels:
       - version/1.11
     - name: "1.12"
-      value: origin/release-1.12
+      value: release-1.12
       path: "/errbot/repository/1.12"
       url_prefix:
         source: "https://github.com/kubernetes/website/blob/release-1.12/content/en"
       labels:
       - version/1.12
     - name: "1.13"
-      value: origin/release-1.13
+      value: release-1.13
       path: "/errbot/repository/1.13"
       url_prefix:
         source: "https://github.com/kubernetes/website/blob/release-1.13/content/en"

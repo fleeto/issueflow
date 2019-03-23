@@ -4,6 +4,7 @@ from os.path import splitext
 import os
 from githubutil.github import GithubOperator
 import json
+from datetime import datetime, timedelta
 
 
 class TranslateUtil:
@@ -188,7 +189,7 @@ class TranslateUtil:
 
     def get_default_label(self, repository_name, branch, language):
         """
-
+        A new issue will be labeled with these labels.
         :param repository_name:
         :param branch:
         :param language:
@@ -200,6 +201,13 @@ class TranslateUtil:
         return labels
 
     def get_search_label(self, repository_name, branch, language):
+        """
+        Find dupe issues with these labels.
+        :param repository_name:
+        :param branch:
+        :param language:
+        :return:
+        """
         labels = self._configure.get_branch(repository_name, branch)["labels"]
         labels += self._configure.get_languages(repository_name, language)["labels"]
         return labels
@@ -282,3 +290,51 @@ class TranslateUtil:
         if file_name[:1] != "/":
             middle = "/"
         return "{}{}{}".format(prefix, middle, file_name)
+
+    def get_code_pr_and_files(self, repository,
+                              branch, language,
+                              labels=[], search_limit=30):
+        after_date = datetime.now() - timedelta(days=5)
+        after_date = after_date.strftime("%Y-%m-%d")
+        base = self._configure.get_branch(repository, branch)["value"]
+
+        repository_data = self._configure.get_repository(repository)
+        code_repo = "{}/{}".format(
+            repository_data["github"]["code"]["owner"],
+            repository_data["github"]["code"]["repository"],
+        )
+        prefix = self._configure.get_languages(repository, language)["path"]
+        query = "repo:{} type:pr {} created:>{}".format(
+            code_repo,
+            " ".join(["label:{}".format(label) for label in labels]),
+            after_date
+        )
+        github_client = GithubOperator(self._github_token)
+        pr_list = github_client.search_issue(query, search_limit)
+        result = []
+        for item in pr_list:
+            pr = item.as_pull_request()
+            if pr.base.ref != base:
+                continue
+            file_name_list = []
+            for file_record in pr.get_files():
+                file_name_list.append(file_record.filename)
+            file_name_list = self._filter_file_type(repository, file_name_list)
+            file_name_list = [file_name for file_name in file_name_list if file_name.startswith(prefix)]
+            item = {
+                "url": pr.html_url,
+                "number": pr.number,
+                "files": file_name_list,
+                "merged": pr.is_merged(),
+                "base": pr.base.ref,
+                "head": pr.head.ref
+
+            }
+            result.append(item)
+        return result
+
+
+
+
+
+

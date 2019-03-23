@@ -5,21 +5,21 @@ import yaml
 
 class Configuration:
     __configure_file = ""
-    __configure_object = None
+    _configure_object = None
     _current_repository_name = ""
 
     def __init__(self, configfile):
         with open(configfile, "r") as handler:
-            self.__configure_object = yaml.load(handler)
+            self._configure_object = yaml.load(handler)
 
     def _get_repository(self, repository_name):
-        return self.__configure_object["repositories"][repository_name]
+        return self._configure_object["repositories"][repository_name]
 
     def list_repository(self):
-        return list((self.__configure_object["repositories"]).keys())
+        return list((self._configure_object["repositories"]).keys())
 
     def get_repository(self, name):
-        return self.__configure_object["repositories"][name]
+        return self._configure_object["repositories"][name]
 
     def list_branch(self, repository_name):
         """

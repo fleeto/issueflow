@@ -56,7 +56,7 @@ def build_issue(trans, branch, item_list):
 
         # Search and create issue
         new_issue = trans.create_issue(
-            remote_repository_name(),
+            task_repository_name(),
             file_name, body, new_labels, search_labels,
             "", True
         )
@@ -71,11 +71,19 @@ def build_issue(trans, branch, item_list):
     return new_count, skip_count
 
 
-def remote_repository_name():
+def task_repository_name():
     repo_config = RepoConfig(REPOSITORY_CONFIG_FILE)
     repo_obj = repo_config.get_repository(REPOSITORY_NAME)
-    repo_owner = repo_obj["github"]["owner"]
-    repo_name = repo_obj["github"]["repository"]
+    repo_owner = repo_obj["github"]["task"]["owner"]
+    repo_name = repo_obj["github"]["task"]["repository"]
+    return "{}/{}".format(repo_owner, repo_name)
+
+
+def code_repository_name():
+    repo_config = RepoConfig(REPOSITORY_CONFIG_FILE)
+    repo_obj = repo_config.get_repository(REPOSITORY_NAME)
+    repo_owner = repo_obj["github"]["code"]["owner"]
+    repo_name = repo_obj["github"]["code"]["repository"]
     return "{}/{}".format(repo_owner, repo_name)
 
 
@@ -141,7 +149,7 @@ class TransBot(BotPlugin):
         :return:
         """
         github_client = self._github_operator(msg)
-        query = "repo:{} is:open type:issue".format(remote_repository_name())
+        query = "repo:{} is:open type:issue".format(task_repository_name())
         issue_list = github_client.search_issue(query, MAX_RESULT)
         tuple_list = [(issue.title, issue.number) for issue in issue_list]
         tuple_list.sort()
@@ -204,7 +212,7 @@ class TransBot(BotPlugin):
         self._asset_bind(msg)
         client = self._github_operator(msg)
         cmd = "repo:{} label:welcome is:open type:issue".format(
-            remote_repository_name())
+            task_repository_name())
         issue_list = client.search_issue(cmd, 10)
         result = limit_result(
             ["{}: {}".format(i.number, i.title)
@@ -224,7 +232,7 @@ class TransBot(BotPlugin):
         """
         self._asset_bind(msg)
         client = self._github_operator(msg)
-        comment_obj = client.issue_comment(remote_repository_name(),
+        comment_obj = client.issue_comment(task_repository_name(),
                                            issue_id, comment)
         return comment_obj.html_url
 
@@ -253,7 +261,7 @@ class TransBot(BotPlugin):
         :rtype: str
         """
         self._asset_bind(msg)
-        return "https://github.com/{}/issues/{}".format(remote_repository_name(),
+        return "https://github.com/{}/issues/{}".format(task_repository_name(),
                                                         issue_id)
 
     @botcmd
@@ -266,7 +274,7 @@ class TransBot(BotPlugin):
         self._asset_bind(msg)
         trans = self._translation_util(msg)
         query = "repo:{} is:open type:issue".format(
-            remote_repository_name()
+            task_repository_name()
         )
         res = trans.cache_issues(query, OPEN_CACHE, MAX_RESULT)
         return "{} records had been cached".format(res)
@@ -342,13 +350,25 @@ class TransBot(BotPlugin):
             cmd.pull()
             yield ("{} had been updated.".format((branch["path"])))
 
-    # @arg_botcmd('repository', type=str)
-    # @arg_botcmd('--count', type=int, default=10)
-    # def list_release(self, msg, repository, count):
-    #     if not self._github_bound(msg.frm.person):
-    #         return "Bind your Github token please."
-    #     client = github.Github(self[msg.frm.person + "github_token"])
-    #     repo = client.get_repo(repository)
-    #     result = gitscan.get_release(repo, count)
-    #     for release in result:
-    #         yield ("{}: {}".format(release.title, release.html_url))
+    @arg_botcmd('branch', type=str)
+    def sync_with_pr(self, msg, branch):
+        # Get repo info
+        # label
+        # base branch
+        # filter files by ext name and language path.
+        self._asset_bind(msg)
+        config = RepoConfig(REPOSITORY_CONFIG_FILE)
+        branch = config.get_branch(REPOSITORY_NAME, branch)
+
+        issue_labels = []
+        issue_labels += branch["labels"]
+
+        language = config.get_languages(REPOSITORY_NAME, TARGET_LANG)
+        issue_labels += language["labels"]
+
+        path_prefix = language["path"]
+
+        trans = self._translation_util(msg)
+        trans.get_code_pr_and_files(
+            code_repository_name(),
+            ["language_zh"])
