@@ -4,6 +4,7 @@ from os.path import splitext
 import os
 from githubutil.github import GithubOperator
 import json
+import re
 
 
 class TranslateUtil:
@@ -50,6 +51,19 @@ class TranslateUtil:
         self._configure.repository = repository_name
         branch_item = self._configure.get_branch(repository_name, branch_name)
         return branch_item["path"]
+
+    def __is_ignore(self, file_name, ignore_list):
+        result = False
+        for pattern in ignore_list:
+            if re.match(pattern, file_name):
+                result = True
+                break
+        return result
+
+    def _remove_ignore_files(self, file_list, repository, branch):
+        ignore_list = self._configure.get_ignore_re_list(repository, branch)
+        result_list = [item for item in file_list if not self.__is_ignore(item, ignore_list)]
+        return result_list
 
     def _get_clean_files(self, repository, branch, path):
         """
@@ -102,7 +116,7 @@ class TranslateUtil:
         # return the different files list
         result = list(set(source_list) - set(target_list))
         result.sort()
-        return result
+        return self._remove_ignore_files(result, repository_name, branch_name)
 
     def cache_issues(self, query, file_name, search_limit=30):
         """
@@ -239,7 +253,7 @@ class TranslateUtil:
 
         github_client = GithubOperator(self._github_token)
         if search_online:
-            search_cmd = "repo:{} in:title {}".format(github_repository, title)
+            search_cmd = "repo:{} state:open is:issue in:title {}".format(github_repository, title)
             if len(search_labels) > 0:
                 search_cmd = "{} {}".format(search_cmd,
                                             " ".join(

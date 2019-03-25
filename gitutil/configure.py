@@ -21,6 +21,12 @@ class Configuration:
     def get_repository(self, name):
         return self.__configure_object["repositories"][name]
 
+    def get_ignore_re_list(self, repository_name, branch_name):
+        branch_item = self.get_branch(repository_name, branch_name)
+        if "ignore" in branch_item.keys():
+            return branch_item["ignore"]
+        return []
+
     def list_branch(self, repository_name):
         """
 
