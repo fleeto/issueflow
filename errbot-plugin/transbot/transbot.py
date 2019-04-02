@@ -7,6 +7,7 @@ from gitutil.configure import Configuration as RepoConfig
 from gitutil.commands import GitCommand
 from transutil.transutil import TranslateUtil
 from errbot import BotPlugin, botcmd, arg_botcmd
+import logging
 
 MAX_RESULT = int(os.getenv("MAX_RESULT"))
 MAX_WRITE = int(os.getenv("MAX_WRITE"))
@@ -272,6 +273,7 @@ class TransBot(BotPlugin):
         :param args:
         """
         self._asset_bind(msg)
+        yield ("Processing....")
         trans = self._translation_util(msg)
         query = "repo:{} is:open type:issue".format(
             task_repository_name()
@@ -299,6 +301,7 @@ class TransBot(BotPlugin):
         if create_issue == 0:
             yield ("\n".join(limit_result(new_file_list)))
         else:
+            yield ("Processing....")
             new_count, skip_count = build_issue(trans, branch, new_file_list)
             yield ("{} Issues had been created. {} Issues had been skipped.".format(
                 new_count, skip_count))
@@ -315,6 +318,7 @@ class TransBot(BotPlugin):
         :param create_issue:
         """
         self._asset_bind(msg)
+        yield ("Processing....")
         trans = self._translation_util(msg)
         updated_files = trans.find_updated_files(REPOSITORY_NAME, branch, TARGET_LANG)
         if create_issue == 0:
@@ -351,24 +355,10 @@ class TransBot(BotPlugin):
             yield ("{} had been updated.".format((branch["path"])))
 
     @arg_botcmd('branch', type=str)
-    def sync_with_pr(self, msg, branch):
-        # Get repo info
-        # label
-        # base branch
-        # filter files by ext name and language path.
-        self._asset_bind(msg)
-        config = RepoConfig(REPOSITORY_CONFIG_FILE)
-        branch = config.get_branch(REPOSITORY_NAME, branch)
-
-        issue_labels = []
-        issue_labels += branch["labels"]
-
-        language = config.get_languages(REPOSITORY_NAME, TARGET_LANG)
-        issue_labels += language["labels"]
-
-        path_prefix = language["path"]
-
+    def sync_with_pr_in(self, msg, branch):
+        yield("Processing....")
         trans = self._translation_util(msg)
-        trans.get_code_pr_and_files(
-            code_repository_name(),
-            ["language_zh"])
+        result = trans.sync_pr_state_to_task_issue(REPOSITORY_NAME, branch, TARGET_LANG)
+        for pr in result:
+            yield(pr)
+        yield("{} PR had been processed".format(len(result)))

@@ -1,56 +1,37 @@
 repositories:
-  kubernetes:
+  istio:
     github:
       task:
-        owner: k8smeetup
-        repository: website-tasks
+        owner: servicemesher
+        repository: istio-official-translation
       code:
-        owner: kubernetes
-        repository: website
+        owner: istio
+        repository: istio.io
     valid_extensions:
     - ".md"
-    - ".htm"
-    - ".html"
     labels:
     - priority/P0
     branches:
-    - name: "1.10"
-      value: release-1.10
-      path: "/errbot/repository/1.10"
+    - name: "1.1"
+      target_branch: release-1.1
+      path: "/errbot/repository/1.1"
       url_prefix:
-        source: "https://github.com/kubernetes/website/blob/release-1.10/content/en"
+        source: "https://github.com/istio/istio.io/tree/release-1.1/content"
       labels:
-      - version/1.10
-    - name: "1.11"
-      value: release-1.11
-      path: "/errbot/repository/1.11"
-      url_prefix:
-        source: "https://github.com/kubernetes/website/blob/release-1.11/content/en"
-      labels:
-      - version/1.11
-    - name: "1.12"
-      value: release-1.12
-      path: "/errbot/repository/1.12"
-      url_prefix:
-        source: "https://github.com/kubernetes/website/blob/release-1.12/content/en"
-      labels:
-      - version/1.12
-    - name: "1.13"
-      value: release-1.13
-      path: "/errbot/repository/1.13"
-      url_prefix:
-        source: "https://github.com/kubernetes/website/blob/release-1.13/content/en"
-      labels:
-      - version/1.13
+      - version/1.1
+      ignore: ['^\/test\/.*?$', '^\/boilerplates\/test.*?$']
     source:
       name: en
-      path: content/en
+      path: content
     languages:
     - name: zh
-      path: content/zh
+      path: content_zh
       labels:
       - lang/zh
-    - name: jp
-      path: content/jp
-      labels:
-      - lang/jp
+      target_labels:
+      - translation/chinese
+    status:
+      pushed: pushed
+      merged: merged
+      pending: pending
+      working: translating

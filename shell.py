@@ -13,9 +13,10 @@ from githubutil.github import GithubOperator
 #
 # exit(0)
 
-util = TranslateUtil("/Users/dustise/Documents/issueflow/config/repository.yaml",
+util = TranslateUtil("/Users/dustise/Downloads/k8s-repo.yaml",
                      "8e8173564597caaa955154f760989d1f245a3eaa")
 
-pr_list = util.get_code_pr_and_files("kubernetes", "1.12", "zh", ["language/zh"])
+result = util.sync_pr_state_to_task_issue("kubernetes", "1.12", "zh", days=5)
 
-print(pr_list)
+for item in result:
+    print(item)

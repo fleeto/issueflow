@@ -1,3 +1,5 @@
+import time
+
 from gitutil.commands import GitCommand
 from gitutil.configure import Configuration
 from os.path import splitext
@@ -5,6 +7,8 @@ import os
 from githubutil.github import GithubOperator
 import json
 from datetime import datetime, timedelta
+import re
+import logging
 
 
 class TranslateUtil:
@@ -51,6 +55,20 @@ class TranslateUtil:
         self._configure.repository = repository_name
         branch_item = self._configure.get_branch(repository_name, branch_name)
         return branch_item["path"]
+
+    @staticmethod
+    def __is_ignore(file_name, ignore_list):
+        result = False
+        for pattern in ignore_list:
+            if re.match(pattern, file_name):
+                result = True
+                break
+        return result
+
+    def _remove_ignore_files(self, file_list, repository, branch):
+        ignore_list = self._configure.get_ignore_re_list(repository, branch)
+        result_list = [item for item in file_list if not self.__is_ignore(item, ignore_list)]
+        return result_list
 
     def _get_clean_files(self, repository, branch, path):
         """
@@ -103,7 +121,7 @@ class TranslateUtil:
         # return the different files list
         result = list(set(source_list) - set(target_list))
         result.sort()
-        return result
+        return self._remove_ignore_files(result, repository_name, branch_name)
 
     def cache_issues(self, query, file_name, search_limit=30):
         """
@@ -208,12 +226,12 @@ class TranslateUtil:
         :param language:
         :return:
         """
-        labels = self._configure.get_branch(repository_name, branch)["labels"]
+        labels = self._configure.get_branch(repository_name, branch)["labels"].copy()
         labels += self._configure.get_languages(repository_name, language)["labels"]
         return labels
 
-    def create_issue(self, github_repository, title, body, labels=[],
-                     search_labels=[],
+    def create_issue(self, github_repository, title, body, labels=None,
+                     search_labels=None,
                      search_cache="",
                      search_online=False):
         """
@@ -231,6 +249,10 @@ class TranslateUtil:
         :type search_cache: str
         :rtype: github.Issue.Issue
         """
+        if search_labels is None:
+            search_labels = []
+        if labels is None:
+            labels = []
         dupe = False
         if len(search_cache) > 0:
             with open(search_cache, "r") as handler:
@@ -247,7 +269,7 @@ class TranslateUtil:
 
         github_client = GithubOperator(self._github_token)
         if search_online:
-            search_cmd = "repo:{} in:title {}".format(github_repository, title)
+            search_cmd = "repo:{} state:open is:issue in:title {}".format(github_repository, title)
             if len(search_labels) > 0:
                 search_cmd = "{} {}".format(search_cmd,
                                             " ".join(
@@ -291,12 +313,33 @@ class TranslateUtil:
             middle = "/"
         return "{}{}{}".format(prefix, middle, file_name)
 
-    def get_code_pr_and_files(self, repository,
-                              branch, language,
-                              labels=[], search_limit=30):
-        after_date = datetime.now() - timedelta(days=5)
+    def sync_pr_state_to_task_issue(self, repository, branch, language, days=5, search_limit=30):
+        pr_list = self._get_code_pr_and_files(
+            repository, branch, language, days, search_limit
+        )
+        pr_file_list = self._clean_pr_files(pr_list, repository, language)
+        result = []
+        for pr_record in pr_file_list:
+            result += self._sync_task_with_file_name(repository, branch, language, pr_record)
+        return result
+
+    def _get_code_pr_and_files(self, repository,
+                               branch, language, days=5,
+                               search_limit=30):
+        """
+        Find recent PRs with specified language.
+
+        :param days:
+        :return:
+        :param repository: Repository name
+        :param branch: Branch name
+        :param language: Language
+        :param search_limit:
+        :return:
+        """
+        after_date = datetime.now() - timedelta(days=days)
         after_date = after_date.strftime("%Y-%m-%d")
-        base = self._configure.get_branch(repository, branch)["value"]
+        base = self._configure.get_branch(repository, branch)["target_branch"]
 
         repository_data = self._configure.get_repository(repository)
         code_repo = "{}/{}".format(
@@ -304,11 +347,13 @@ class TranslateUtil:
             repository_data["github"]["code"]["repository"],
         )
         prefix = self._configure.get_languages(repository, language)["path"]
+        labels = self._configure.get_languages(repository, language)["target_labels"]
         query = "repo:{} type:pr {} created:>{}".format(
             code_repo,
             " ".join(["label:{}".format(label) for label in labels]),
             after_date
         )
+        logging.warning(query)
         github_client = GithubOperator(self._github_token)
         pr_list = github_client.search_issue(query, search_limit)
         result = []
@@ -321,20 +366,131 @@ class TranslateUtil:
                 file_name_list.append(file_record.filename)
             file_name_list = self._filter_file_type(repository, file_name_list)
             file_name_list = [file_name for file_name in file_name_list if file_name.startswith(prefix)]
-            item = {
+            record = {
                 "url": pr.html_url,
                 "number": pr.number,
                 "files": file_name_list,
                 "merged": pr.is_merged(),
                 "base": pr.base.ref,
-                "head": pr.head.ref
-
+                "head": pr.head.ref,
+                "owner": pr.user.login,
+                "comments": [],
+                "object": pr
             }
-            result.append(item)
+            # get comments
+            for comment in pr.get_issue_comments():
+                if comment.body.startswith("`[trans-bot:"):
+                    record["comments"].append(comment.body)
+            result.append(record)
         return result
 
+    def _clean_pr_files(self, pr_list, repository, language):
+        target_path = self._configure.get_languages(repository, language)["path"]
 
+        result = []
+        for pr in pr_list:
+            pr_merged = False
+            for comment in pr["comments"]:
+                if comment.startswith("`[trans-bot:merged]`"):
+                    pr_merged = True
+                if comment.startswith("`[trans-bot:N/A]`"):
+                    pr_merged = True
+            if pr_merged:
+                continue
+            time.sleep(2)
+            if len(pr["files"]) != 1:
+                body_pattern = "Thank you @{}, I can only process the PR with 1 file included, "
+                body = "`[trans-bot:N/A]`\n\n" + body_pattern.format(pr["owner"]) + \
+                       "will not be reported to the task issues."
+                pr["object"].create_issue_comment(body)
+                continue
+            path_sep = target_path.split(os.sep)
+            file_list = []
+            for file_name in pr["files"]:
+                if file_name.split(os.sep)[:len(path_sep)] == path_sep:
+                    file_list.append(file_name[len(target_path):])
+            pr["file_name"] = file_list[0]
+            result.append(pr.copy())
+        return result
 
+    def _remove_status_label(self, repository, issue_item):
+        for status in ["pushed", "merged", "pending", "working"]:
+            status_label = self._configure.get_status_label(repository, status)
+            if status_label in issue_item["labels"]:
+                issue_item["object"].remove_from_labels(status_label)
 
+    def _sync_task_with_file_name(self, repository, branch, language, pr):
+        search_labels = self.get_search_label(repository, branch, language)
+        repository_data = self._configure.get_repository(repository)
+        task_repo_name = "{}/{}".format(
+            repository_data["github"]["task"]["owner"],
+            repository_data["github"]["task"]["repository"]
+        )
+        file_name = pr["file_name"]
+        query = "repo:{} state:open type:issue in:title {} {}".format(
+            task_repo_name,
+            " ".join(["label:{}".format(i) for i in search_labels]),
+            file_name
+        )
+        logging.warning(query)
+        github_client = GithubOperator(self._github_token)
+        issue_list = github_client.search_issue(query)
+        result = []
+        for issue in issue_list:
+            if issue.title != file_name:
+                continue
+            issue_item = {
+                "title": issue.title,
+                "number": issue.number,
+                "url": issue.html_url,
+                "labels": [],
+                "object": issue,
+            }
+            if issue.assignee is not None:
+                issue_item["owner"] = issue.assignee.login
+            else:
+                body_pattern = "Thank you @{}, the [related task issue]({}) has no assignee. "
+                body = "`[trans-bot:N/A]`\n\n" + body_pattern.format(pr["owner"], issue_item["url"]) + \
+                       "will not be reported to the task issues"
+                pr["object"].create_issue_comment(body)
+                continue
+            for label in issue.labels:
+                issue_item["labels"].append(label.name)
+            issue_working = self._configure.get_status_label(
+                repository, "working") in issue_item["labels"]
+            issue_pushed = self._configure.get_status_label(
+                repository, "pushed") in issue_item["labels"]
+            same_user = issue_item["owner"] == pr["owner"]
+            if not same_user:
+                body_pattern = "Thank you @{}, the [related task issue]({}) had been assigned to others. "
+                body = "`[trans-bot:N/A]`\n\n" + body_pattern.format(pr["owner"], issue_item["url"]) + \
+                       "will not be reported to the task issues"
+                pr["object"].create_issue_comment(body)
+                result.append(pr["url"])
+                continue
+            if pr["merged"]:
+                body_pattern = "Thank you @{}, the [related task issue]({}) had been updated."
+                if issue_pushed:
+                    issue.create_comment("/merged")
+                else:
+                    self._remove_status_label(repository, issue_item)
+                    issue.add_to_labels(self._configure.get_status_label(repository, "pushed"))
+                    time.sleep(1)
+                    issue.create_comment("/merged")
+                body = "`[trans-bot:merged]`\n\n" + body_pattern.format(pr["owner"], issue_item["url"])
+                pr["object"].create_issue_comment(body)
 
-
+                result.append(pr["url"])
+                continue
+            body_pattern = "Thank you @{}, the [related task issue]({}) had been updated."
+            body = "`[trans-bot:pushed]`\n\n" + body_pattern.format(pr["owner"], issue_item["url"])
+            if issue_pushed:
+                continue
+            if not issue_working:
+                self._remove_status_label(repository, issue_item)
+                issue.add_to_labels(self._configure.get_status_label(repository, "working"))
+                time.sleep(1)
+            pr["object"].create_issue_comment(body)
+            issue.create_comment("/pushed")
+            result.append(pr["url"])
+        return result
