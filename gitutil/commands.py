@@ -66,7 +66,7 @@ class GitCommand:
 
     def get_diff_by_hash(self, filename, new_hashcode, old_hashcode):
         command = [
-            "diff", new_hashcode, old_hashcode,
+            "diff", old_hashcode, new_hashcode,
             filename
         ]
         return self.__command_wrapper(command).strip()

@@ -13,10 +13,10 @@ from githubutil.github import GithubOperator
 #
 # exit(0)
 
-util = TranslateUtil("/Users/dustise/Downloads/k8s-repo.yaml",
-                     "8e8173564597caaa955154f760989d1f245a3eaa")
+util = TranslateUtil("/Users/dustise/Downloads/istio-repository.yaml",
+                     "")
 
-result = util.sync_pr_state_to_task_issue("kubernetes", "1.12", "zh", days=5)
+result = util.sync_pr_state_to_task_issue("istio", "1.1", "zh", days=5)
 
 for item in result:
     print(item)
