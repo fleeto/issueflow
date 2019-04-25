@@ -9,6 +9,16 @@ import json
 from datetime import datetime, timedelta
 import re
 import logging
+import hashlib
+from shutil import copyfile
+
+
+def md5_hash(file_name):
+    hash_util = hashlib.md5()
+    with open(file_name, 'rb') as afile:
+        buf = afile.read()
+        hash_util.update(buf)
+    return hash_util.hexdigest()
 
 
 class TranslateUtil:
@@ -494,3 +504,49 @@ class TranslateUtil:
             issue.create_comment("/pushed")
             result.append(pr["url"])
         return result
+
+    def copy_version(self, repository, from_version, to_version, target_lang):
+        config = self._configure
+        source_repo_base_path = config.get_branch(repository, from_version)["path"]
+        target_repo_base_path = config.get_branch(repository, to_version)["path"]
+        source_lang_path = self._configure.get_source(repository)["path"]
+        target_lang_path = self._configure.get_languages(repository, target_lang)["path"]
+
+        source_repo_source_files = set(self._get_clean_files(repository,
+                                                             from_version, source_lang_path))
+        source_repo_target_files = set(self._get_clean_files(repository,
+                                                             from_version, target_lang_path))
+        source_same_files = (source_repo_source_files & source_repo_target_files)
+        dest_repo_source_files = set(self._get_clean_files(repository,
+                                                           to_version, source_lang_path))
+        same_list = source_same_files & dest_repo_source_files
+        for same_file_name in same_list:
+            source_file = "{}/{}{}".format(
+                source_repo_base_path,
+                source_lang_path,
+                same_file_name
+            )
+            target_file = "{}/{}{}".format(
+                target_repo_base_path,
+                source_lang_path,
+                same_file_name
+            )
+            source_hash = md5_hash(source_file)
+            target_hash = md5_hash(target_file)
+
+            if source_hash == target_hash:
+                source_trans_file = "{}/{}{}".format(
+                    source_repo_base_path,
+                    target_lang_path,
+                    same_file_name
+                )
+                target_trans_file = "{}/{}{}".format(
+                    target_repo_base_path,
+                    target_lang_path,
+                    same_file_name
+                )
+                print(target_hash, source_file)
+                new_path = os.path.dirname(target_trans_file)
+                if not os.path.exists(new_path):
+                    os.makedirs(new_path)
+                copyfile(source_trans_file, target_trans_file)
