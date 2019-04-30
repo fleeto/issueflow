@@ -550,3 +550,25 @@ class TranslateUtil:
                 if not os.path.exists(new_path):
                     os.makedirs(new_path)
                 copyfile(source_trans_file, target_trans_file)
+
+    def set_milestone_by_label(self, repository_name, label_list, milestone,
+                               core_limit=10, search_limit=10):
+        repository_data = self._configure.get_repository(repository_name)
+        task_repo_name = "{}/{}".format(
+            repository_data["github"]["task"]["owner"],
+            repository_data["github"]["task"]["repository"]
+        )
+        github_client = GithubOperator(self._github_token)
+        label_query = " ".join(["label:" + item for item in label_list])
+        query = "type:issue -milestone:{} repo:{} {}".format(milestone, task_repo_name, label_query)
+        logging.info(query)
+        issue_list = github_client.search_issue(query, search_limit)
+
+        count = 0
+        for issue in issue_list:
+            count += 1
+            if count % core_limit == 0:
+                github_client.check_limit(core_limit, search_limit)
+            github_client.set_issue_milestone(task_repo_name,
+                                              issue, milestone)
+        return count

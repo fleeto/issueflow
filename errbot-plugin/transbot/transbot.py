@@ -356,9 +356,19 @@ class TransBot(BotPlugin):
 
     @arg_botcmd('branch', type=str)
     def sync_with_pr_in(self, msg, branch):
-        yield("Processing....")
+        yield ("Processing....")
         trans = self._translation_util(msg)
         result = trans.sync_pr_state_to_task_issue(REPOSITORY_NAME, branch, TARGET_LANG)
         for pr in result:
-            yield(pr)
-        yield("{} PR had been processed".format(len(result)))
+            yield (pr)
+        yield ("{} PR had been processed".format(len(result)))
+
+    @arg_botcmd("label", type=str)
+    @arg_botcmd("--milestone", type=str)
+    def label_to_milestone(self, msg, label, milestone):
+        trans = self._translation_util(msg)
+        count = trans.set_milestone_by_label(REPOSITORY_NAME,
+                                             [label], milestone)
+        return "{} issues had been moved into the milestone {}".format(
+            count, milestone
+        )

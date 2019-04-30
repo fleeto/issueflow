@@ -115,6 +115,17 @@ class GithubOperator:
         issue = self.get_issue(repository_name, issue_id)
         return issue.create_comment(comment_body)
 
+    def set_issue_milestone(self, repository_name, issue, milestone_name):
+        if isinstance(issue, int):
+            issue = self.get_issue(repository_name, issue)
+        repo = self.get_repo(repository_name)
+        milestone_list = repo.get_milestones(state="open")
+        for ms in milestone_list:
+            if ms.title == milestone_name:
+                issue.edit(milestone=ms)
+                return issue
+        return None
+
 
 class GithubAction(GithubOperator):
     label_list = None
